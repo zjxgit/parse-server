@@ -790,11 +790,7 @@ function transformUpdateOperator({
   }
 }
 function mapValues(object, iterator) {
-  const result = {};
-  Object.keys(object).forEach((key) => {
-    result[key] = iterator(object[key]);
-  });
-  return result;
+  return _.mapValues(object, iterator);
 }
 
 const nestedMongoObjectToNestedParseObject = mongoObject => {
