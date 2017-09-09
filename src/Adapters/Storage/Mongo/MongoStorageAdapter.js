@@ -14,12 +14,20 @@ import {
 import Parse                 from 'parse/node';
 import _                     from 'lodash';
 import defaults              from '../../../defaults';
+const logger = require('../../../logger');
 
 const mongodb = require('mongodb');
 const MongoClient = mongodb.MongoClient;
 const ReadPreference = mongodb.ReadPreference;
 
 const MongoSchemaCollectionName = '_SCHEMA';
+
+const debug = function(){
+  let args = [...arguments];
+  args = ['Mongo: ' + arguments[0]].concat(args.slice(1, args.length));
+  const log = logger.getLogger();
+  log.debug.apply(log, args);
+}
 
 const storageAdapterAllCollections = mongoAdapter => {
   return mongoAdapter.connect()
@@ -274,6 +282,11 @@ export class MongoStorageAdapter {
   createObject(className, schema, object) {
     schema = convertParseSchemaToMongoSchema(schema);
     const mongoObject = parseObjectToMongoObjectForCreate(className, object, schema);
+    debug('createObject', {
+      className,
+      object,
+      mongoObject,
+    });
     return this._adaptiveCollection(className)
       .then(collection => collection.insertOne(mongoObject))
       .catch(error => {
@@ -297,6 +310,10 @@ export class MongoStorageAdapter {
   // If there is some other error, reject with INTERNAL_SERVER_ERROR.
   deleteObjectsByQuery(className, schema, query) {
     schema = convertParseSchemaToMongoSchema(schema);
+    debug('deleteObjectsByQuery', {
+      className,
+      query
+    });
     return this._adaptiveCollection(className)
       .then(collection => {
         const mongoWhere = transformWhere(className, query, schema);
@@ -317,6 +334,13 @@ export class MongoStorageAdapter {
     schema = convertParseSchemaToMongoSchema(schema);
     const mongoUpdate = transformUpdate(className, update, schema);
     const mongoWhere = transformWhere(className, query, schema);
+    debug('updateObjectsByQuery', {
+      className,
+      query,
+      update,
+      mongoWhere,
+      mongoUpdate,
+    });
     return this._adaptiveCollection(className)
       .then(collection => collection.updateMany(mongoWhere, mongoUpdate));
   }
@@ -327,6 +351,13 @@ export class MongoStorageAdapter {
     schema = convertParseSchemaToMongoSchema(schema);
     const mongoUpdate = transformUpdate(className, update, schema);
     const mongoWhere = transformWhere(className, query, schema);
+    debug('findOneAndUpdate', {
+      className,
+      query,
+      update,
+      mongoWhere,
+      mongoUpdate,
+    });
     return this._adaptiveCollection(className)
       .then(collection => collection._mongoCollection.findAndModify(mongoWhere, [], mongoUpdate, { new: true }))
       .then(result => mongoObjectToParseObject(className, result.value, schema));
@@ -337,6 +368,13 @@ export class MongoStorageAdapter {
     schema = convertParseSchemaToMongoSchema(schema);
     const mongoUpdate = transformUpdate(className, update, schema);
     const mongoWhere = transformWhere(className, query, schema);
+    debug('upsertOneObject', {
+      className,
+      query,
+      update,
+      mongoWhere,
+      mongoUpdate,
+    });
     return this._adaptiveCollection(className)
       .then(collection => collection.upsertOne(mongoWhere, mongoUpdate));
   }
@@ -352,6 +390,12 @@ export class MongoStorageAdapter {
     }, {});
 
     readPreference = this._parseReadPreference(readPreference);
+    debug('find', {
+      className,
+      query,
+      mongoWhere,
+      options: { skip, limit, sort, keys, readPreference }
+    });
     return this.createTextIndexesIfNeeded(className, query)
       .then(() => this._adaptiveCollection(className))
       .then(collection => collection.find(mongoWhere, {
@@ -398,8 +442,14 @@ export class MongoStorageAdapter {
   count(className, schema, query, readPreference) {
     schema = convertParseSchemaToMongoSchema(schema);
     readPreference = this._parseReadPreference(readPreference);
+    const mongoWhere = transformWhere(className, query, schema);
+    debug('count', {
+      className,
+      query,
+      mongoWhere
+    });
     return this._adaptiveCollection(className)
-      .then(collection => collection.count(transformWhere(className, query, schema), {
+      .then(collection => collection.count(mongoWhere, {
         maxTimeMS: this._maxTimeMS,
         readPreference,
       }));
