@@ -24,7 +24,7 @@ const MongoSchemaCollectionName = '_SCHEMA';
 
 const debug = function(){
   let args = [...arguments];
-  args = ['Mongo: ' + arguments[0]].concat(args.slice(1, args.length));
+  args = ['MongoStorageAdapter: ' + arguments[0]].concat(args.slice(1, args.length));
   const log = logger.getLogger();
   log.debug.apply(log, args);
 }
