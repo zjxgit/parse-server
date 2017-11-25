@@ -63,20 +63,13 @@ const defaultCLPS = Object.freeze({
 
 function mongoSchemaToParseSchema(mongoSchema) {
   let clps = defaultCLPS;
-  let indexes = {}
-  if (mongoSchema._metadata) {
-    if (mongoSchema._metadata.class_permissions) {
-      clps = {...emptyCLPS, ...mongoSchema._metadata.class_permissions};
-    }
-    if (mongoSchema._metadata.indexes) {
-      indexes = {...mongoSchema._metadata.indexes};
-    }
+  if (mongoSchema._metadata && mongoSchema._metadata.class_permissions) {
+    clps = {...emptyCLPS, ...mongoSchema._metadata.class_permissions};
   }
   return {
     className: mongoSchema._id,
     fields: mongoSchemaFieldsToParseSchemaFields(mongoSchema),
     classLevelPermissions: clps,
-    indexes: indexes,
   };
 }
 

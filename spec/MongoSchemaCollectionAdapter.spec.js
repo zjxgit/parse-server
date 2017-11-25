@@ -21,9 +21,6 @@ describe('MongoSchemaCollection', () => {
           "create":{"*":true},
           "delete":{"*":true},
           "addField":{"*":true},
-        },
-        "indexes": {
-          "name1":{"deviceToken":1}
         }
       },
       "installationId":"string",
@@ -69,10 +66,7 @@ describe('MongoSchemaCollection', () => {
         update: { '*': true },
         delete: { '*': true },
         addField: { '*': true },
-      },
-      indexes: {
-        name1: {deviceToken: 1}
-      },
+      }
     });
     done();
   });
